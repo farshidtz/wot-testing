@@ -1,0 +1,35 @@
+
+name: Validate TDs
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+      
+      - name: Setup Node.js                         
+        uses: actions/setup-node@v1
+        with:
+          node-version: 15.x                      
+      
+      - uses: actions/checkout@master
+        with:
+          name: thingweb/thingweb-playground
+      
+      - name: Install dependencies
+        working-directory: thingweb-playground/packages/cli
+        run: npm install
+
+      - name: Run validation script on all new matching files
+        run: |
+          git diff --name-only | \
+          grep ".*\.td.jsonld$" | \
+          xargs node thingweb-playground/packages/cli/index.js
+      
