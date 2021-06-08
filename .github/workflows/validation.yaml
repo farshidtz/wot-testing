@@ -40,8 +40,11 @@ jobs:
         #   grep ".*\.td.jsonld$" | \
         #   xargs -i node thingweb-playground/packages/cli/index.js {}
         run: |
-          changed=$(git diff --name-only HEAD HEAD~1)
+          URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
+          changed=$(curl -s -X GET -G $URL | jq -r '.[] | .filename')
+          # changed=$(git diff --name-only HEAD HEAD~1)
           for file in $changed; do
+            echo "----------"
             if [[ $file == *.td.jsonld ]]; then 
               echo 'Validating' $file '...'
               result=$(node thingweb-playground/packages/cli/index.js $file)
