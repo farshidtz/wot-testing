@@ -2,7 +2,7 @@
     "@context": ["https://www.w3.org/2019/wot/td/v1", {
         "@language": "en"
     }],
-    "title": "Hue Indoor Sensor 1",
+    "title": "Hue Indoor Sensor 1 - changed",
     "id": "urn:dev:ops:32473-HueIndoorSensor-1",
     "security": "basic_sc",
     "securityDefinitions": {
