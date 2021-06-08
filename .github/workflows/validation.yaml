@@ -7,14 +7,11 @@ on:
 jobs:
   validate-tds:
     name: Validate TDs
-
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout wot-testing
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
                      
       - name: Checkout thingweb-playground
         uses: actions/checkout@v2
@@ -32,23 +29,25 @@ jobs:
         run: npm install
 
       - name: Run validation script on all new matching files
-        # run: |
-        #   git diff --name-only HEAD HEAD~1 | \
-        #   grep ".*\.td.jsonld$" | \
-        #   xargs -i node thingweb-playground/packages/cli/index.js {}
+        env:
+          VALIDATION_SCRIPT: thingweb-playground/packages/cli/index.js
+          PATTERN: "*.td.jsonld" 
         run: |
-          URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
-          changed=$(curl -s -X GET -G $URL | jq -r '.[] | .filename')
-          # changed=$(git diff --name-only HEAD HEAD~1)
-          for file in $changed; do
+          # Get the list of changed files
+          url="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
+          changed_files=$(curl -s -X GET -G $url | jq -r '.[] | .filename')
+
+          exit_code=0
+          for file in $changed_files; do
             echo "----------"
-            if [[ $file == *.td.jsonld ]]; then 
+            # Check the file extension
+            if [[ $file == $PATTERN ]]; then 
               echo 'Validating' $file '...'
-              result=$(node thingweb-playground/packages/cli/index.js $file)
+              result=$(node $VALIDATION_SCRIPT $file)
               if [[ $result == *"'failed'"* ]]; then
                 echo "$result"
-                echo 'Validation failed ✗'
-                exit 1
+                echo '::error::Validation failed ✗'
+                exit_code=1
               else
                 echo "$result"
                 echo 'Validation passed ✓'
@@ -57,5 +56,6 @@ jobs:
               echo 'Skipped' $file
             fi
           done
+          exit $exit_code
 
       
